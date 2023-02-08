@@ -1,0 +1,7 @@
+list1 = [{'a': 100, 'b': 200},{'a': 1400, 'b': 220},{'a': 1200, 'b': 100}]
+
+lis2 = sorted(list1, key=lambda d: d['b'])
+
+print(lis2)
+
+print(list1)
