@@ -49,8 +49,10 @@ generalQueue = 0
 queue = 0
 
 # initialize customer types
-# customer_type, time_between_arrivals = generateCustomerType()
-customer_type = ['Business','Economy','Economy','Economy','Economy','Business','Business','Economy','Economy','Economy','Economy','Economy','Economy']
+customer_type, time_between_arrivals = generateCustomerType()
+# customer_type = ['Business','Economy','Economy','Economy','Economy','Business','Business','Economy','Economy','Economy','Economy','Economy','Economy']
+
+
 # first event:
 curEvent = {
         'cusType': customer_type[0], 
@@ -117,7 +119,7 @@ while len(completedEvents) < 20:
                     nextEvent.append(arrivalEvent)
 
                 # sort events by time
-                nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
+                nextEvent = sorted(nextEvent, key=lambda d: (d['eventTime'],d['cusType']))
 
                 # add finished event to completed list
                 completedEvents.append(curEvent)
@@ -146,9 +148,15 @@ while len(completedEvents) < 20:
                 else:
                     nextEvent.append(arrivalEvent)
 
-                nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
+                nextEvent = sorted(nextEvent, key=lambda d: (d['eventTime'],d['cusType']))
 
                 completedEvents.append(curEvent) # event shouldnt be processed 
+
+            if nextArrivalTime < departureTime:    # might need to change
+                server_busy = True
+            else:
+                server_busy = False
+
     
                 
 
@@ -178,7 +186,7 @@ while len(completedEvents) < 20:
                                 }
                     
                     nextEvent.append(departEvent)
-                    nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
+                    nextEvent = sorted(nextEvent, key=lambda d: (d['eventTime'],d['cusType']))
                                             # dequeue for econ
                                             # NEXTEVENT = econ queue pop
                                             # departure time = curevent[time] + service time
@@ -198,29 +206,32 @@ while len(completedEvents) < 20:
                             }
                     
                 nextEvent.append(departEvent)
-                nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
+                nextEvent = sorted(nextEvent, key=lambda d:(d['eventTime'],d['cusType']))
                             # dequeue from business
                             # create departure time for business customer
             completedEvents.append(curEvent)
 
         # event is done and we set the service desk status accordingly 
-        if nextArrivalTime < departureTime:    # might need to change
-            server_busy = True
-        else:
-            server_busy = False
+
+        
 
 
 
 
-customers = [1,2,3,4,5,6,7,8,9,10]
+customers = [1,2,3,4,5,6,7,8,9,10] # good
+service_Times = [3,3,3,3,3,3,3,3,3,3] # good
 
 
-
-arrivaltimes = []
-customer_type = []
-intArrivals = []
+arrivaltimes = [] # good
+customer_type = [] # good
+int_Arrivals = [] # good
 timeServiceBegins = []
 timeServiceEnds = []
+
+# time customer in queue  time service begins - arrival
+tsiq = []
+# time in system (time departed - time arrived)
+# system idle 
 
 for i in range(1,11):
     for curEvent in completedEvents:
@@ -231,24 +242,31 @@ for i in range(1,11):
     #     # get event arrival time
                 arrivaltimes.append(curEvent['eventTime'])
     #     # get int arrival time
-            if curEvent['cusType'] == 'Business':
-                intArrivals.append('4')
-            else:
-                intArrivals.append('2')
+            
          
-        if curEvent['eventType'] == 'departure':
-            # get time service begins 
-            timeServiceBegins.append(curEvent['eventTime']-3)
-            # get time service ends
-            timeServiceEnds.append(curEvent['eventTime'])
+            if curEvent['eventType'] == 'departure':
+                # get time service begins 
+                timeServiceBegins.append(curEvent['eventTime']-3)
+                # get time service ends
+                timeServiceEnds.append(curEvent['eventTime'])
 
-# print(customers)
-# print(arrivaltimes)
-# print(customer_type)
-# print(intArrivals)
-# print(timeServiceBegins)
-# print(timeServiceEnds)
+for cust in customer_type:
+    if cust == 'Business':
+        int_Arrivals.append('4')
+    else:
+        int_Arrivals.append('2')
+            
+for i in range(10):
+    tsiq.append(timeServiceBegins[i]-arrivaltimes[i])
 
+
+print(customers)
+print(arrivaltimes)
+print(customer_type)
+print(int_Arrivals)
+print(timeServiceBegins)
+print(timeServiceEnds)
+print(tsiq)
 
 
 for event in completedEvents:
