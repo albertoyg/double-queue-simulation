@@ -13,7 +13,7 @@ def generateCustomerType():
     time_between_arrivals = []
     for i in range(size+1):
         randValue = random.randrange(0,10)
-        if randValue < 6:
+        if randValue <= 3:
            customer_type.append('Business')
            time_between_arrivals.append(4)
         else:
@@ -41,8 +41,8 @@ time = 0
 server_busy = False
 
 # length of queues
-econQueue = 0
-busQueue = 0
+econQueue = []
+busQueue = []
 
 generalQueue = 0
 
@@ -69,7 +69,7 @@ kill = False
 # while curEvent['cusNo'] != 11:
 # start loop
 # while len(customer_type) >= 0:
-while len(completedEvents) < 10:
+while len(completedEvents) < 20:
     # receive event
     # if curEvent['cusNo'] == 11:
     #         kill = True 
@@ -124,14 +124,15 @@ while len(completedEvents) < 10:
 
             else: # service desk is busy
                 # if customer type = business
-                        # business queue + 1 
-                # else 
-                        # econ queue + 1
+                if curEvent['cusType'] == 'Business':
+                    # business queue append event
+                    busQueue.append(curEvent)        
+                else:
+                    # econ queue apend event 
+                    econQueue.append(curEvent)
                 # generate next arrival event 
                 # add event to event list
                 # sort events by time 
-
-                generalQueue += 1
                 arrivalEvent = {
                                 'cusType': customer_type[0], 
                                 'cusNo': curEvent['cusNo']+1,
@@ -153,45 +154,54 @@ while len(completedEvents) < 10:
 
         # if event is departure
         else:
-        
-            if generalQueue == 0:
-                server_busy = False
-                completedEvents.append(curEvent)
 
-            else: 
-                generalQueue -= 1
-                server_busy = True
-
-                departureTime = serviceTime + curEvent['eventTime']
-
-                for i in completedEvents:
-                    if i['cusNo'] == curEvent['cusNo']+1:
-                        tempCusType = i['cusType']
-
-                departEvent = {
-                                'cusType': tempCusType, # fix this <-- need to get right customer type
-                                'cusNo': curEvent['cusNo']+1, 
+            # is the business queue empty?
+            
+            if len(busQueue) == 0:
+            # yes
+                # is the econ queue empty?
+                if len(econQueue) == 0:
+                     # yes
+                    server_busy = False
+                                            # service desk is not busy
+                                            # idle time starts
+                else:
+                # no
+                    server_busy = True
+                    queuedEvent = econQueue.pop(0) 
+                    departureTime = serviceTime + curEvent['eventTime']
+                    departEvent = {
+                                'cusType': queuedEvent['cusType'], # fix this <-- need to get right customer type
+                                'cusNo': queuedEvent['cusNo'], 
                                 'eventType': 'departure',
                                 'eventTime':  departureTime,
                                 }
-                # add event to event list
+                    
+                    nextEvent.append(departEvent)
+                    nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
+                                            # dequeue for econ
+                                            # NEXTEVENT = econ queue pop
+                                            # departure time = curevent[time] + service time
+                                            # departEvent = NEXTEVENT cusnom, type, dt, depart
+                                            # create departure time for econ customer
+             
+            else:
+            # no                    queuedEvent = econQueue.pop(0) 
+                server_busy = True
+                queuedEvent = busQueue.pop(0) 
+                departureTime = serviceTime + curEvent['eventTime']
+                departEvent = {
+                            'cusType': queuedEvent['cusType'], # fix this <-- need to get right customer type
+                            'cusNo': queuedEvent['cusNo'], 
+                            'eventType': 'departure',
+                            'eventTime':  departureTime,
+                            }
+                    
                 nextEvent.append(departEvent)
                 nextEvent = sorted(nextEvent, key=lambda d: d['eventTime'])
-
-                completedEvents.append(curEvent)
-
-            # is the business queue empty?
-                    # yes
-                            # is the econ queue empty?
-                                    # yes
-                                            # service desk is not busy
-                                            # idle time starts
-                                    # no 
-                                            # dequeue for econ
-                                            # create departure time for econ customer
-                    # no
                             # dequeue from business
                             # create departure time for business customer
+            completedEvents.append(curEvent)
 
         # event is done and we set the service desk status accordingly 
         if nextArrivalTime < departureTime:    # might need to change
@@ -199,6 +209,45 @@ while len(completedEvents) < 10:
         else:
             server_busy = False
 
+
+
+
+customers = [1,2,3,4,5,6,7,8,9,10]
+
+
+
+arrivaltimes = []
+customer_type = []
+intArrivals = []
+timeServiceBegins = []
+timeServiceEnds = []
+
+for i in range(1,11):
+    for curEvent in completedEvents:
+        if curEvent['cusNo'] == i:
+            if curEvent['eventType'] == 'arrival':
+         # get customer type
+                customer_type.append(curEvent['cusType'])
+    #     # get event arrival time
+                arrivaltimes.append(curEvent['eventTime'])
+    #     # get int arrival time
+            if curEvent['cusType'] == 'Business':
+                intArrivals.append('4')
+            else:
+                intArrivals.append('2')
+         
+        if curEvent['eventType'] == 'departure':
+            # get time service begins 
+            timeServiceBegins.append(curEvent['eventTime']-3)
+            # get time service ends
+            timeServiceEnds.append(curEvent['eventTime'])
+
+print(customers)
+print(arrivaltimes)
+print(customer_type)
+print(intArrivals)
+print(timeServiceBegins)
+print(timeServiceEnds)
 
 
 
