@@ -4,22 +4,8 @@ Owner : Hritik Jaiswal
 Topic : To simulate a Single Server Queuing System (One-operator Barbershop problem) using Python
 Subject : Modeling and simulation
 '''
-
+from prettytable import PrettyTable
 import random 
-
-def generateCustomerType():
-    customer_type = []
-    size = 15
-    time_between_arrivals = []
-    for i in range(size+1):
-        randValue = random.randrange(0,10)
-        if randValue <= 3:
-           customer_type.append('Business')
-           time_between_arrivals.append(4)
-        else:
-            customer_type.append('Economy') 
-            time_between_arrivals.append(2)
-    return customer_type, time_between_arrivals
 
 
 # constant service time
@@ -48,9 +34,12 @@ generalQueue = 0
 
 queue = 0
 
+
 # initialize customer types
-customer_type, time_between_arrivals = generateCustomerType()
+# customer_type, time_between_arrivals = generateCustomerType()
 # customer_type = ['Business','Economy','Economy','Economy','Economy','Business','Business','Economy','Economy','Economy','Economy','Economy','Economy']
+random.seed(10)
+customer_type = (random.choices(["Business", "Economy"], weights=[0.6, 0.4], k=15))
 
 
 # first event:
@@ -152,7 +141,7 @@ while len(completedEvents) < 20:
 
                 completedEvents.append(curEvent) # event shouldnt be processed 
 
-            if nextArrivalTime < departureTime:    # might need to change
+            if nextArrivalTime <= departureTime:    # might need to change
                 server_busy = True
             else:
                 server_busy = False
@@ -211,27 +200,24 @@ while len(completedEvents) < 20:
                             # create departure time for business customer
             completedEvents.append(curEvent)
 
-        # event is done and we set the service desk status accordingly 
-
+   
         
-
-
-
-
 customers = [1,2,3,4,5,6,7,8,9,10] # good
 service_Times = [3,3,3,3,3,3,3,3,3,3] # good
-
+int_Arrivals = [0]
 
 arrivaltimes = [] # good
 customer_type = [] # good
-int_Arrivals = [] # good
+# int_Arrivals = [] # fix: need to change to since last 
 timeServiceBegins = []
 timeServiceEnds = []
 
 # time customer in queue  time service begins - arrival
 tsiq = []
 # time in system (time departed - time arrived)
+tis = []
 # system idle 
+idle = []
 
 for i in range(1,11):
     for curEvent in completedEvents:
@@ -250,115 +236,40 @@ for i in range(1,11):
                 # get time service ends
                 timeServiceEnds.append(curEvent['eventTime'])
 
-for cust in customer_type:
-    if cust == 'Business':
-        int_Arrivals.append('4')
+for i in range(10):
+    if customer_type[i] == 'Business':
+        int_Arrivals.append(4)
     else:
-        int_Arrivals.append('2')
+        int_Arrivals.append(2)
+
+int_Arrivals.pop(-1)
             
 for i in range(10):
     tsiq.append(timeServiceBegins[i]-arrivaltimes[i])
+    tis.append(timeServiceEnds[i]-arrivaltimes[i])
 
+arrivaltimes.append(0)
 
-print(customers)
-print(arrivaltimes)
-print(customer_type)
-print(int_Arrivals)
-print(timeServiceBegins)
-print(timeServiceEnds)
-print(tsiq)
+timeServiceBeginsSorted = sorted(timeServiceBegins)
+timeServiceEndsSorted = sorted(timeServiceEnds)
+timeServiceBeginsSorted.append(timeServiceEndsSorted[-1])
 
+idle.append(0)
 
-for event in completedEvents:
-    print(event)
+for i in range(10):
+    if timeServiceEndsSorted[i]<timeServiceBeginsSorted[i+1]:
+        idle.append(timeServiceBeginsSorted[i+1]-timeServiceEnds[i])
+    else:
+        idle.append(0)
 
-'''
-    # generate next event
-    event = {'cusType': customer_type[0], 'eventType': 'arrival', 'arrivalTime': 0}
-    # dequeue from customer list
-    customer_type.pop(0)
+arrivaltimes.pop(-1)
+idle.pop(-1)
 
-    # add event to nextEvent
-    nextEvent.append(event)
-    
-    # add finished event to completed list
-    completedEvents.append(curEvent)
-'''
-
-
-
-
-
-
-"""
-
-# Seed 
-random.seed(10)
-
-# No. of Customer
-size = 10
-
-# Series of customer
-customer = [i for i in range(1,size+1)]
-
-customer_type, time_between_arrivals = generateCustomerType()
-
-# Inter Arrival Time 
-
-# Service Time
-service_time = [3 for i in range(size)]
-
-print(len(service_time))
-
-# Calculate arrival time
-arrival_time = [0 for i in range(size)]
-
-# initial
-arrival_time[0] = 0
-
-for i in range(1,size):
-#   arrival_time[i] = inter_arrival_time[i]+arrival_time[i-1]
-    arrival_time[i] = time_between_arrivals[i-1]+arrival_time[i-1]
- 
-
-Time_Service_Begin = [0 for i in range(size)]
-Time_Customer_Waiting_in_Queue = [0 for i in range(size)]
-Time_Service_Ends = [0 for i in range(size)]
-Time_Customer_Spend_in_System = [0 for i in range(size)]
-System_ideal = [0 for i in range(size)]
-
-Time_Service_Begin[0] = arrival_time[0]
-Time_Service_Ends[0] = Time_Service_Begin[0] + service_time[0]
-Time_Customer_Spend_in_System[0] = service_time[0]
-
-
-
-for i in range(1,size):
-  # Time Service Begin 
-  Time_Service_Begin[i] = max(arrival_time[i],Time_Service_Ends[i-1])
-
-  # Time customer waiting in queue   
-  Time_Customer_Waiting_in_Queue[i] = Time_Service_Begin[i]-arrival_time[i]
-
-  # Time service ends
-  Time_Service_Ends[i] = Time_Service_Begin[i] + service_time[i]  
-
-  # Time Customer Spend in the system
-  Time_Customer_Spend_in_System[i] = Time_Service_Ends[i] - arrival_time[i]
-
-  # Time when system remains ideal
-  if (arrival_time[i]>Time_Service_Ends[i-1]):
-    System_ideal[i] = arrival_time[i]-Time_Service_Ends[i-1]
-  else:
-    System_ideal[i] = 0 
-    
-
-from prettytable import PrettyTable
 
 x = PrettyTable()
 
-column_names = ['Customer','AT','ST','TSB','TCWQ','TSE','TCSS','System Ideal','type','arrivals']
-data = [customer,arrival_time,service_time, Time_Service_Begin, Time_Customer_Waiting_in_Queue, Time_Service_Ends, Time_Customer_Spend_in_System, System_ideal, customer_type, time_between_arrivals]
+column_names = ['Customer','IAT','AT','ST','TSB','TCWQ','TSE','TCSS','System Ideal','type']
+data = [customers,int_Arrivals,arrivaltimes,service_Times, timeServiceBegins, tsiq, timeServiceEnds, tis, idle, customer_type]
 
 length = len(column_names)
 
@@ -384,27 +295,27 @@ Average time customer spent in the system  = total time customers customer spent
 '''
 
 # Average waiting time 
-Average_waiting_time = sum(Time_Customer_Waiting_in_Queue)/size 
+Average_waiting_time = sum(tsiq)/10 
 
 # Probability of customer were waiting
-no_customer_who_are_waiting = len(list(filter(lambda x:x>0,Time_Customer_Waiting_in_Queue)))
+no_customer_who_are_waiting = len(list(filter(lambda x:x>0,tsiq)))
 
-prob_customer_waiting = no_customer_who_are_waiting / size
+prob_customer_waiting = no_customer_who_are_waiting / 10
 
 # Average service time
-Average_service_time = sum(service_time)/size
+Average_service_time = sum(service_Times)/10
 
 # Probability of idle server
-prob_ideal_server = sum(System_ideal) / Time_Service_Ends[size-1]  
+prob_ideal_server = sum(idle) / timeServiceEnds[10-1]  
 
 # Average time between arrival
-Average_Time_Between_Arrival = arrival_time[size-1] / (len(arrival_time) - 1)
+Average_Time_Between_Arrival = arrivaltimes[10-1] / (len(arrivaltimes) - 1)
 
 # Average waiting time those who wait
-average_waiting_time = sum(Time_Customer_Waiting_in_Queue) / no_customer_who_are_waiting
+average_waiting_time = sum(tsiq) / no_customer_who_are_waiting
 
 # Average time customer spent in the system 
-time_customer_spent = sum(Time_Customer_Spend_in_System)/size
+time_customer_spent = sum(tis)/10
 
 print("Average waiting time : {:.2f}".format(Average_waiting_time))
 print('-'*50)
@@ -428,4 +339,4 @@ print('-'*50)
 
 print("Average time customer spent in the system : {:.2f}".format(time_customer_spent))
 
-"""
+
